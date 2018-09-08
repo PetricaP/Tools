@@ -74,8 +74,7 @@ while i < len(lines):
 
             # Remove keywords
             line = line.replace('static ', '')
-            line = line.replace('\t', '', 1)
-            line = line.replace('    ', '', 1)
+            line = line.lstrip()
             line = line.replace('virtual ', '')
 
             method = []
@@ -114,6 +113,7 @@ while i < len(lines):
 
 # We got everything we need from the header file
 
+# print(methods)
 
 # Working in source file
 # In case file non existent, create it
@@ -134,13 +134,49 @@ lines = [line.rstrip('\n') for line in srcfile]
 implmethods = methods
 implfunctions = functions
 
-for line in lines:
-    for method in methods:
-        if line.find(method[0]) != -1:
-            implmethods.remove(method)
-    for function in functions:
-        if line.find(function[0]) != -1:
-            implfunctions.remove(function)
+i = 0
+while i < len(lines):
+    line = lines[i]
+
+    if line.find('(') != -1:
+        found = ""
+
+        while line.find(')') == -1:
+            added = line.lstrip()
+            found += ' ' + added
+            i += 1
+            line = lines[i]
+
+        added = line.lstrip()
+        found += ' ' + added
+
+        for method in methods:
+            generated = ""
+            for line in method:
+                generated += line.lstrip() + ' '
+
+            if found.find(generated) != -1:
+                implmethods.remove(method)
+
+        while line.find(')') == -1:
+            added = line.lstrip()
+            found += ' ' + added
+            i += 1
+            line = lines[i]
+
+        added = line.lstrip()
+        found += ' ' + added
+
+        for function in functions:
+            generated = ""
+            for line in function:
+                generated += line.lstrip() + ' '
+
+            if found.find(generated) != -1:
+                implfunctions.remove(function)
+    i += 1
+
+# print(implfunctions)
 
 srcfile.close()
 srcfile = open(srcfilename, "a")
@@ -164,5 +200,5 @@ for i in range(0, len(functions) - 1):
 
 if (len(functions) > 0):
     for j in range(0, len(functions[-1]) - 1):
-        srcfile.write('\n' + functios[i][j])
+        srcfile.write('\n' + functions[-1][j])
     srcfile.write('\n' + functions[-1][-1] + ' {}\n')
